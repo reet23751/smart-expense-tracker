@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}AI Financial Advisor - Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h2 class="fw-bold mb-0">AI Financial Advisor</h2>
+      <span class="ai-badge"><i class="bi bi-stars"></i> Gemini 3.8 Flash</span>
+    </div>
+    <p class="text-muted small mb-0">Personalized spending intelligence, savings leaks, and 30-day action plan.</p>
+  </div>
+
+  <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+    <select class="form-select form-select-sm fw-medium" id="advisorPeriodSelect" style="min-width: 150px;">
+      <option value="this-month" selected>This Month</option>
+      <option value="last-month">Last Month</option>
+      <option value="last-3-months">Last 3 Months</option>
+    </select>
+    <button class="btn btn-ai btn-sm rounded-pill px-3 text-nowrap d-flex align-items-center gap-2" id="generateAdviceBtn">
+      <span class="spinner-border spinner-border-sm d-none" id="advisorSpinner"></span>
+      <i class="bi bi-arrow-repeat" id="advisorBtnIcon"></i>
+      <span>Refresh Insights</span>
+    </button>
+  </div>
+</div>
+
+<!-- Financial Health Score & Executive Summary -->
+<div class="row g-4 mb-4">
+  <!-- Score Gauge -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card card-modern h-100 text-center p-4 d-flex flex-column justify-content-center">
+      <div class="small text-muted text-uppercase fw-bold mb-2">Financial Health Score</div>
+      <div class="health-gauge my-2" id="advisorHealthScore">--</div>
+      <div class="fw-semibold text-dark mb-1" id="advisorScoreBadge">Analyzing...</div>
+      <div class="small text-muted" style="font-size: 0.75rem;">Based on savings rate, cash flow stability & budget adherence.</div>
+    </div>
+  </div>
+
+  <!-- Executive Summary -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card card-modern h-100 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark">Executive Spending Summary</h5>
+        <span class="badge bg-light text-muted small" id="advisorTimestamp">Last updated: Just now</span>
+      </div>
+      <p class="fs-6 text-secondary mb-3" id="advisorSummaryText" style="line-height: 1.6;">
+        Click "Refresh Insights" to let Gemini analyze your recent financial records and pinpoint where your money goes.
+      </p>
+
+      <!-- Financial Snapshot Badges -->
+      <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+        <div class="badge bg-light text-dark border px-3 py-2 fw-medium" id="badgeIncome">Income: ₹0.00</div>
+        <div class="badge bg-light text-dark border px-3 py-2 fw-medium" id="badgeExpense">Expenses: ₹0.00</div>
+        <div class="badge bg-light text-dark border px-3 py-2 fw-medium" id="badgeSavingsRate">Savings Rate: 0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2-Column Detailed Action Cards -->
+<div class="row g-4 mb-4">
+  <!-- Top Spending Insights -->
+  <div class="col-12 col-lg-6">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean bg-transparent">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-pie-chart-fill"></i>
+          </div>
+          <span class="fw-bold">Largest Spending Outflows</span>
+        </div>
+      </div>
+      <div class="card-body p-3">
+        <ul class="list-group list-group-flush" id="advisorTopCategoriesList">
+          <li class="list-group-item text-muted small py-3">No spending insights generated yet.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Practical Savings Opportunities -->
+  <div class="col-12 col-lg-6">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean bg-transparent">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-piggy-bank-fill"></i>
+          </div>
+          <span class="fw-bold">Practical Money-Saving Suggestions</span>
+        </div>
+      </div>
+      <div class="card-body p-3">
+        <ul class="list-group list-group-flush" id="advisorSavingsTipsList">
+          <li class="list-group-item text-muted small py-3">Suggestions will appear here after analysis.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 30-Day Action Plan -->
+<div class="card card-modern mb-4">
+  <div class="card-header-clean bg-transparent">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--primary);">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <span class="fw-bold">Recommended 30-Day Financial Action Plan</span>
+    </div>
+  </div>
+  <div class="card-body p-3 p-md-4">
+    <div class="row g-3" id="advisorActionPlanContainer">
+      <div class="col-12 text-muted small py-3">Action plan steps will be displayed here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Disclaimer Notice -->
+<div class="p-3 rounded-3 bg-light text-muted small d-flex align-items-center gap-2 border">
+  <i class="bi bi-shield-check text-primary fs-5"></i>
+  <div>
+    <strong>AI Financial Guidance Disclaimer:</strong> All recommendations are generated algorithmically to assist your personal awareness and budgeting discipline. They are informational estimates and do not constitute certified tax, legal, or professional investment advice.
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/advisor.js') }}"></script>
+{% endblock %}
