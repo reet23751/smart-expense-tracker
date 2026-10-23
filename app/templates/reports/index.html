@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & History - Smart Expense Tracker & AI Advisor{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Financial Reports</h2>
+    <p class="text-muted small mb-0">Monthly statements, category totals, and data export.</p>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <!-- CSV Export Button -->
+    <a href="{{ url_for('reports.api_export_csv') }}" class="btn btn-outline-primary d-flex align-items-center gap-2 rounded-pill px-3" id="exportCsvBtn">
+      <i class="bi bi-download"></i>
+      <span>Export to CSV</span>
+    </a>
+  </div>
+</div>
+
+<!-- Period Selection -->
+<div class="card card-modern p-3 mb-4">
+  <div class="row g-2 align-items-center">
+    <div class="col-12 col-md-4">
+      <label class="form-label small text-muted fw-bold mb-1">REPORTING PERIOD</label>
+      <select class="form-select" id="reportPeriodSelect">
+        <option value="this-month" selected>This Month</option>
+        <option value="last-month">Last Month</option>
+        <option value="last-3-months">Last 3 Months</option>
+        <option value="this-year">This Year</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-8 text-md-end pt-md-4">
+      <span class="text-muted small" id="reportDateRangeLabel">Showing transactions for selected period</span>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Historical Comparison Table -->
+<div class="card card-modern mb-4">
+  <div class="card-header-clean">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-calendar2-range text-primary"></i>
+      <span class="fw-bold">12-Month Performance History</span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4">Month</th>
+          <th class="text-end">Total Income</th>
+          <th class="text-end">Total Expenses</th>
+          <th class="text-end">Net Savings</th>
+          <th class="text-end pe-4">Status</th>
+        </tr>
+      </thead>
+      <tbody id="reportHistoryTableBody">
+        <tr>
+          <td colspan="5" class="text-center py-4 text-muted">Loading history...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Category Breakdown Table -->
+<div class="card card-modern">
+  <div class="card-header-clean">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-list-ul text-secondary"></i>
+      <span class="fw-bold">Category Totals for Period</span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4">Category</th>
+          <th class="text-center">Count</th>
+          <th class="text-end">Total Spent</th>
+          <th class="text-end pe-4">Share of Total</th>
+        </tr>
+      </thead>
+      <tbody id="reportCategoryTableBody">
+        <tr>
+          <td colspan="4" class="text-center py-4 text-muted">Loading category totals...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}
