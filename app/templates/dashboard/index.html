@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Expense Tracker & AI Advisor{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Financial Dashboard</h2>
+    <p class="text-muted small mb-0">Overview of your spending, savings, and AI guidance.</p>
+  </div>
+
+  <!-- Date Range Filter -->
+  <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar3"></i></span>
+      <select class="form-select border-start-0 fw-medium" id="dashboardPeriodSelect" style="min-width: 150px;">
+        <option value="this-month" selected>This Month</option>
+        <option value="last-month">Last Month</option>
+        <option value="last-3-months">Last 3 Months</option>
+        <option value="this-year">This Year</option>
+      </select>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="refreshDashboardBtn" title="Refresh Data">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+</div>
+
+<!-- 4 Summary Metric Cards -->
+<div class="row g-3 mb-4">
+  <!-- Total Income -->
+  <div class="col-6 col-lg-3">
+    <div class="card card-modern metric-card border-0">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="metric-title">Total Income</span>
+        <div class="metric-icon-box metric-income">
+          <i class="bi bi-arrow-down-left"></i>
+        </div>
+      </div>
+      <div class="metric-value text-success" id="cardTotalIncome">₹0.00</div>
+      <div class="small text-muted mt-1" id="incomeSubtitle">Period inflow</div>
+    </div>
+  </div>
+
+  <!-- Total Expenses -->
+  <div class="col-6 col-lg-3">
+    <div class="card card-modern metric-card border-0">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="metric-title">Total Expenses</span>
+        <div class="metric-icon-box metric-expense">
+          <i class="bi bi-arrow-up-right"></i>
+        </div>
+      </div>
+      <div class="metric-value text-danger" id="cardTotalExpenses">₹0.00</div>
+      <div class="small text-muted mt-1" id="expenseSubtitle">Period outflow</div>
+    </div>
+  </div>
+
+  <!-- Net Balance -->
+  <div class="col-6 col-lg-3">
+    <div class="card card-modern metric-card border-0">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="metric-title">Net Balance</span>
+        <div class="metric-icon-box metric-balance">
+          <i class="bi bi-wallet2"></i>
+        </div>
+      </div>
+      <div class="metric-value text-primary" id="cardNetBalance">₹0.00</div>
+      <div class="small text-muted mt-1">Remaining cash</div>
+    </div>
+  </div>
+
+  <!-- Savings Rate -->
+  <div class="col-6 col-lg-3">
+    <div class="card card-modern metric-card border-0">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="metric-title">Savings Rate</span>
+        <div class="metric-icon-box metric-savings">
+          <i class="bi bi-percent"></i>
+        </div>
+      </div>
+      <div class="metric-value" style="color: #7c3aed;" id="cardSavingsRate">0.0%</div>
+      <div class="small text-muted mt-1" id="savingsTargetNote">Benchmark: 20%+</div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Financial Advisor Highlight Card -->
+<div class="card card-modern ai-card p-3 p-md-4 mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div class="d-flex align-items-start gap-3">
+      <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--ai-gradient-start), var(--ai-gradient-end)); flex-shrink: 0;">
+        <i class="bi bi-stars fs-4"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h5 class="fw-bold mb-0">AI Financial Advisor</h5>
+          <span class="ai-badge"><i class="bi bi-cpu"></i> Gemini Powered</span>
+        </div>
+        <p class="text-secondary small mb-2" id="aiSummaryPreview">
+          Analyzing your spending habits to find savings opportunities...
+        </p>
+        <div id="aiTopTipPreview" class="small fw-semibold text-dark"></div>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 align-self-end align-self-md-center">
+      <a href="{{ url_for('advisor.index') }}" class="btn btn-ai btn-sm rounded-pill px-3 text-nowrap">
+        <span>View Full Advisor</span>
+        <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row: Income vs Expenses Bar + Category Expense Doughnut -->
+<div class="row g-4 mb-4">
+  <!-- Spending Trend & Comparison -->
+  <div class="col-12 col-lg-8">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-line-fill text-primary"></i>
+          <span class="fw-bold">Income vs Expenses (6 Months)</span>
+        </div>
+      </div>
+      <div class="card-body p-3">
+        <div class="chart-container">
+          <canvas id="monthlyCompChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown Doughnut -->
+  <div class="col-12 col-lg-4">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-pie-chart-fill" style="color: #ec4899;"></i>
+          <span class="fw-bold">Expense Breakdown</span>
+        </div>
+      </div>
+      <div class="card-body p-3 d-flex flex-column justify-content-center">
+        <div class="chart-container" style="height: 240px;">
+          <canvas id="categoryDoughnutChart"></canvas>
+        </div>
+        <div id="doughnutEmptyState" class="text-center text-muted small py-4 d-none">
+          No expenses recorded for this period.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Budgets Progress & Recent Transactions Row -->
+<div class="row g-4">
+  <!-- Monthly Budget Status -->
+  <div class="col-12 col-lg-5">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-bullseye text-warning"></i>
+          <span class="fw-bold">Budget Status</span>
+        </div>
+        <a href="{{ url_for('budgets.index') }}" class="small fw-semibold text-primary text-decoration-none">Manage</a>
+      </div>
+      <div class="card-body p-3" id="budgetProgressList">
+        <div class="text-center py-4 text-muted small">Loading budgets...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="col-12 col-lg-7">
+    <div class="card card-modern h-100">
+      <div class="card-header-clean">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-secondary"></i>
+          <span class="fw-bold">Recent Transactions</span>
+        </div>
+        <a href="{{ url_for('transactions.index') }}" class="small fw-semibold text-primary text-decoration-none">View All</a>
+      </div>
+      <div class="card-body p-0">
+        <!-- List container -->
+        <div id="recentTransactionsList">
+          <div class="text-center py-4 text-muted small">Loading transactions...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
