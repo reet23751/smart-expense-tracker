@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>{% block title %}Smart Expense Tracker & AI Financial Advisor{% endblock %}</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid px-3 px-lg-4">
+      <a class="navbar-brand" href="{{ url_for('dashboard.index') if current_user.is_authenticated else url_for('auth.login') }}">
+        <div class="brand-icon">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <span>Smart<span style="color: #7c3aed;">Expense</span></span>
+      </a>
+
+      {% if current_user.is_authenticated %}
+      <div class="d-flex align-items-center gap-2">
+        <!-- Quick Add button for desktop -->
+        <button class="btn btn-primary-custom btn-sm d-none d-lg-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#quickAddModal">
+          <i class="bi bi-plus-lg"></i>
+          <span>Add Transaction</span>
+        </button>
+
+        <!-- User profile dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-light rounded-pill px-3 py-1 d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem; font-weight: 600;">
+              {{ current_user.name[:1].upper() }}
+            </div>
+            <span class="d-none d-md-inline small font-weight-medium">{{ current_user.name }}</span>
+            <i class="bi bi-chevron-down small text-muted"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: 12px;">
+            <li class="px-3 py-2 border-bottom">
+              <div class="fw-bold small">{{ current_user.name }}</div>
+              <div class="text-muted" style="font-size: 0.75rem;">{{ current_user.email }}</div>
+            </li>
+            <li><a class="dropdown-item py-2" href="{{ url_for('categories.index') }}"><i class="bi bi-tags me-2 text-primary"></i>Categories</a></li>
+            <li><a class="dropdown-item py-2" href="{{ url_for('reports.index') }}"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Reports</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+          </ul>
+        </div>
+
+        <!-- Mobile drawer toggle button -->
+        <button class="btn btn-light d-lg-none border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+      </div>
+      {% else %}
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">Log In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-sm px-3 rounded-pill">Sign Up</a>
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Mobile Offcanvas Menu (Drawer) -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title d-flex align-items-center gap-2 text-primary fw-bold" id="mobileMenuLabel">
+        <div class="brand-icon" style="width: 32px; height: 32px; font-size: 0.9rem;">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        SmartExpense AI
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+      {% if current_user.is_authenticated %}
+      <div class="d-flex align-items-center gap-3 p-3 mb-3 bg-light rounded-3">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px; font-size: 1.1rem;">
+          {{ current_user.name[:1].upper() }}
+        </div>
+        <div>
+          <div class="fw-bold">{{ current_user.name }}</div>
+          <div class="text-muted small">{{ current_user.email }}</div>
+        </div>
+      </div>
+
+      <nav class="nav flex-column gap-1">
+        <a class="nav-link-custom {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+          <i class="bi bi-grid-1x2-fill"></i>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'transactions.index' %}active{% endif %}" href="{{ url_for('transactions.index') }}">
+          <i class="bi bi-arrow-left-right"></i>
+          <span>Transactions</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'budgets.index' %}active{% endif %}" href="{{ url_for('budgets.index') }}">
+          <i class="bi bi-pie-chart-fill"></i>
+          <span>Budgets & Goals</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'analytics.index' %}active{% endif %}" href="{{ url_for('analytics.index') }}">
+          <i class="bi bi-graph-up-arrow"></i>
+          <span>Spending Analytics</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'advisor.index' %}active{% endif %}" href="{{ url_for('advisor.index') }}">
+          <i class="bi bi-stars" style="color: #7c3aed;"></i>
+          <span>AI Financial Advisor</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'categories.index' %}active{% endif %}" href="{{ url_for('categories.index') }}">
+          <i class="bi bi-tags"></i>
+          <span>Categories</span>
+        </a>
+        <a class="nav-link-custom {% if request.endpoint == 'reports.index' %}active{% endif %}" href="{{ url_for('reports.index') }}">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Reports & CSV Export</span>
+        </a>
+      </nav>
+
+      <hr class="my-4">
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100 rounded-pill py-2">
+        <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+      </a>
+      {% else %}
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary-custom">Log In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary">Create Account</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- App Layout -->
+  <div class="container-fluid">
+    <div class="row">
+      {% if current_user.is_authenticated %}
+      <!-- Desktop Sidebar (Hidden on Mobile) -->
+      <aside class="col-lg-2 d-none d-lg-block sidebar">
+        <nav class="nav flex-column">
+          <div class="small text-muted text-uppercase fw-bold px-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">Menu</div>
+          <a class="nav-link-custom {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-link-custom {% if request.endpoint == 'transactions.index' %}active{% endif %}" href="{{ url_for('transactions.index') }}">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Transactions</span>
+          </a>
+          <a class="nav-link-custom {% if request.endpoint == 'budgets.index' %}active{% endif %}" href="{{ url_for('budgets.index') }}">
+            <i class="bi bi-pie-chart-fill"></i>
+            <span>Budgets</span>
+          </a>
+          <a class="nav-link-custom {% if request.endpoint == 'analytics.index' %}active{% endif %}" href="{{ url_for('analytics.index') }}">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>Analytics</span>
+          </a>
+
+          <div class="small text-muted text-uppercase fw-bold px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">AI Intelligence</div>
+          <a class="nav-link-custom {% if request.endpoint == 'advisor.index' %}active{% endif %}" href="{{ url_for('advisor.index') }}">
+            <i class="bi bi-stars" style="color: #7c3aed;"></i>
+            <span>AI Advisor</span>
+          </a>
+
+          <div class="small text-muted text-uppercase fw-bold px-3 mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">Management</div>
+          <a class="nav-link-custom {% if request.endpoint == 'categories.index' %}active{% endif %}" href="{{ url_for('categories.index') }}">
+            <i class="bi bi-tags"></i>
+            <span>Categories</span>
+          </a>
+          <a class="nav-link-custom {% if request.endpoint == 'reports.index' %}active{% endif %}" href="{{ url_for('reports.index') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            <span>Reports</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="col-12 col-lg-10 p-3 p-md-4">
+      {% else %}
+      <main class="col-12 p-3 p-md-4">
+      {% endif %}
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mb-3">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-3 shadow-sm border-0" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <!-- Mobile Bottom Navigation Bar (Optimized for one-hand thumb use) -->
+  <div class="mobile-bottom-nav">
+    <a href="{{ url_for('dashboard.index') }}" class="mobile-nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      <i class="bi bi-grid-1x2-fill"></i>
+      <span>Home</span>
+    </a>
+    <a href="{{ url_for('transactions.index') }}" class="mobile-nav-item {% if request.endpoint == 'transactions.index' %}active{% endif %}">
+      <i class="bi bi-arrow-left-right"></i>
+      <span>History</span>
+    </a>
+    <a href="#" class="mobile-nav-item quick-add-item" data-bs-toggle="modal" data-bs-target="#quickAddModal" aria-label="Add transaction">
+      <div class="mobile-quick-add-btn">
+        <i class="bi bi-plus-lg"></i>
+      </div>
+      <span>Add</span>
+    </a>
+    <a href="{{ url_for('budgets.index') }}" class="mobile-nav-item {% if request.endpoint == 'budgets.index' %}active{% endif %}">
+      <i class="bi bi-pie-chart-fill"></i>
+      <span>Budgets</span>
+    </a>
+    <a href="{{ url_for('advisor.index') }}" class="mobile-nav-item {% if request.endpoint == 'advisor.index' %}active{% endif %}">
+      <i class="bi bi-stars"></i>
+      <span>Advisor</span>
+    </a>
+  </div>
+
+  <!-- Mobile Floating Action Button (FAB) for fast one-tap logging -->
+  <button class="fab-btn" data-bs-toggle="modal" data-bs-target="#quickAddModal" title="Quick Add Transaction">
+    <i class="bi bi-plus"></i>
+  </button>
+  {% endif %}
+
+  <!-- Quick Add Transaction Modal (Universal) -->
+  <div class="modal fade" id="quickAddModal" tabindex="-1" aria-labelledby="quickAddModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="quickAddModalLabel">Add Transaction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="quickAddForm">
+          <div class="modal-body">
+            <!-- Type Switcher -->
+            <div class="btn-group w-100 mb-3" role="group" aria-label="Transaction Type">
+              <input type="radio" class="btn-check" name="modal_type" id="modalTypeExpense" value="expense" checked>
+              <label class="btn btn-outline-danger fw-semibold py-2" for="modalTypeExpense">
+                <i class="bi bi-arrow-down-circle me-1"></i> Expense
+              </label>
+
+              <input type="radio" class="btn-check" name="modal_type" id="modalTypeIncome" value="income">
+              <label class="btn btn-outline-success fw-semibold py-2" for="modalTypeIncome">
+                <i class="bi bi-arrow-up-circle me-1"></i> Income
+              </label>
+            </div>
+
+            <!-- Amount Input -->
+            <div class="mb-3">
+              <label class="form-label small text-muted fw-bold">AMOUNT (₹)</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-light border-end-0 fw-bold">₹</span>
+                <input type="number" step="0.01" min="0.01" class="form-control border-start-0 fs-3 fw-bold" id="modalAmount" placeholder="0.00" required inputmode="decimal">
+              </div>
+            </div>
+
+            <!-- Category Select -->
+            <div class="mb-3">
+              <label class="form-label small text-muted fw-bold">CATEGORY</label>
+              <select class="form-select form-select-lg" id="modalCategory" required>
+                <option value="" disabled selected>Select a category...</option>
+              </select>
+            </div>
+
+            <!-- Date Input -->
+            <div class="mb-3">
+              <label class="form-label small text-muted fw-bold">DATE</label>
+              <input type="date" class="form-control form-control-lg" id="modalDate" required>
+            </div>
+
+            <!-- Description / Note -->
+            <div class="mb-2">
+              <label class="form-label small text-muted fw-bold">NOTE / DESCRIPTION (OPTIONAL)</label>
+              <input type="text" class="form-control" id="modalDescription" placeholder="e.g. Grocery shopping, Salary, Dinner">
+            </div>
+
+            <div id="modalFormError" class="alert alert-danger d-none py-2 px-3 small mt-2"></div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-custom rounded-pill px-4" id="modalSaveBtn">
+              <span class="spinner-border spinner-border-sm d-none me-1" id="modalSaveSpinner"></span>
+              Save Transaction
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <!-- Core Universal App Script -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
